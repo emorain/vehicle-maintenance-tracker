@@ -5,6 +5,11 @@ import { Vehicle } from '../types/Vehicle';
 import { MaintenanceForm } from '../components/MaintenanceForm';
 import { MaintenanceList } from '../components/MaintenanceList';
 import { ProtocolAssignment } from '../components/ProtocolAssignment';
+import { FuelService } from '../services/FuelService';
+import { FuelRecordWithMPG, FuelStats as FuelStatsType } from '../types/Fuel';
+import { FuelForm } from '../components/FuelForm';
+import { FuelList } from '../components/FuelList';
+import { FuelStats } from '../components/FuelStats';
 
 export const VehicleDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,24 +18,62 @@ export const VehicleDetails = () => {
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [activeTab, setActiveTab] = useState<'maintenance' | 'protocols' | 'fuel'>('maintenance');
+  const [fuelRecords, setFuelRecords] = useState<FuelRecordWithMPG[]>([]);
+  const [fuelStats, setFuelStats] = useState<FuelStatsType | null>(null);
+  const [showFuelForm, setShowFuelForm] = useState(false);
+  const [editingFuel, setEditingFuel] = useState<FuelRecordWithMPG | null>(null);
+
+  const fetchVehicle = async () => {
+    if (!id) return;
+
+    try {
+      const data = await VehicleService.getVehicleById(id);
+      setVehicle(data);
+    } catch (error) {
+      console.error('Failed to load vehicle:', error);
+      navigate('/inventory');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFuelRecords = async () => {
+    if (!vehicle) return;
+    try {
+      const [records, stats] = await Promise.all([
+        FuelService.getFuelRecords(vehicle.id),
+        FuelService.getFuelStats(vehicle.id),
+      ]);
+      setFuelRecords(records);
+      setFuelStats(stats);
+    } catch (error) {
+      console.error('Failed to fetch fuel records:', error);
+    }
+  };
+
+  const handleFuelFormSuccess = () => {
+    setShowFuelForm(false);
+    setEditingFuel(null);
+    fetchFuelRecords();
+    fetchVehicle(); // Refresh vehicle to update mileage
+  };
+
+  const handleEditFuel = (record: FuelRecordWithMPG) => {
+    setEditingFuel(record);
+    setShowFuelForm(true);
+    setActiveTab('fuel');
+  };
 
   useEffect(() => {
-    const fetchVehicle = async () => {
-      if (!id) return;
-
-      try {
-        const data = await VehicleService.getVehicleById(id);
-        setVehicle(data);
-      } catch (error) {
-        console.error('Failed to load vehicle:', error);
-        navigate('/inventory');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchVehicle();
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (vehicle) {
+      fetchFuelRecords();
+    }
+  }, [vehicle]);
 
   if (loading) {
     return <div className="p-6 text-center">Loading vehicle details...</div>;
@@ -110,46 +153,140 @@ export const VehicleDetails = () => {
         </div>
       </div>
 
-      {/* Protocol Assignment Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <ProtocolAssignment
-          vehicleId={vehicle.id}
-          currentMileage={vehicle.mileage || undefined}
-          refreshKey={refreshKey}
-        />
-      </div>
-
-      {/* Maintenance Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Maintenance History</h2>
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            {showAddForm ? 'Cancel' : 'Add Maintenance'}
-          </button>
+      {/* Tabs */}
+      <div className="bg-white rounded-lg shadow-md">
+        <div className="border-b border-gray-200">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab('maintenance')}
+              className={`px-6 py-3 font-medium transition-colors ${
+                activeTab === 'maintenance'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              🔧 Maintenance
+            </button>
+            <button
+              onClick={() => setActiveTab('protocols')}
+              className={`px-6 py-3 font-medium transition-colors ${
+                activeTab === 'protocols'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              📋 Protocols
+            </button>
+            <button
+              onClick={() => setActiveTab('fuel')}
+              className={`px-6 py-3 font-medium transition-colors ${
+                activeTab === 'fuel'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              ⛽ Fuel Tracking
+            </button>
+          </div>
         </div>
 
-        {/* Add Maintenance Form */}
-        {showAddForm && (
-          <div className="mb-6">
-            <MaintenanceForm
-              vehicleId={vehicle.id}
-              onSuccess={() => {
-                setShowAddForm(false);
-                setRefreshKey((prev) => prev + 1);
-              }}
-              onCancel={() => setShowAddForm(false)}
-            />
-          </div>
-        )}
+        <div className="p-6">
+          {/* Maintenance Tab */}
+          {activeTab === 'maintenance' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">Maintenance History</h2>
+                <button
+                  onClick={() => setShowAddForm(!showAddForm)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  {showAddForm ? 'Cancel' : 'Add Maintenance'}
+                </button>
+              </div>
 
-        {/* Maintenance List */}
-        <MaintenanceList vehicleId={vehicle.id} refreshKey={refreshKey} />
+              {/* Add Maintenance Form */}
+              {showAddForm && (
+                <div>
+                  <MaintenanceForm
+                    vehicleId={vehicle.id}
+                    onSuccess={() => {
+                      setShowAddForm(false);
+                      setRefreshKey((prev) => prev + 1);
+                    }}
+                    onCancel={() => setShowAddForm(false)}
+                  />
+                </div>
+              )}
+
+              {/* Maintenance List */}
+              <MaintenanceList vehicleId={vehicle.id} refreshKey={refreshKey} />
+            </div>
+          )}
+
+          {/* Protocols Tab */}
+          {activeTab === 'protocols' && (
+            <div>
+              <ProtocolAssignment
+                vehicleId={vehicle.id}
+                currentMileage={vehicle.mileage || undefined}
+                refreshKey={refreshKey}
+              />
+            </div>
+          )}
+
+          {/* Fuel Tab */}
+          {activeTab === 'fuel' && (
+            <div className="space-y-6">
+              {/* Fuel Statistics */}
+              {fuelStats && fuelRecords.length > 0 && (
+                <FuelStats stats={fuelStats} />
+              )}
+
+              {/* Add Fuel Record Button */}
+              {!showFuelForm && (
+                <button
+                  onClick={() => {
+                    setShowFuelForm(true);
+                    setEditingFuel(null);
+                  }}
+                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-700 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Fuel Record
+                </button>
+              )}
+
+              {/* Fuel Form */}
+              {showFuelForm && (
+                <FuelForm
+                  vehicleId={vehicle.id}
+                  onSuccess={handleFuelFormSuccess}
+                  existingRecord={editingFuel || undefined}
+                  onCancel={() => {
+                    setShowFuelForm(false);
+                    setEditingFuel(null);
+                  }}
+                  currentMileage={vehicle.mileage}
+                />
+              )}
+
+              {/* Fuel Records List */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Fuel History</h3>
+                <FuelList
+                  records={fuelRecords}
+                  onEdit={handleEditFuel}
+                  onRefresh={fetchFuelRecords}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
