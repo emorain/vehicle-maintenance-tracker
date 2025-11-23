@@ -108,6 +108,18 @@ export const Protocols = () => {
     setEditingProtocol(null);
   };
 
+  const handleClone = (protocol: MaintenanceProtocol) => {
+    setEditingProtocol(null); // Not editing, creating new
+    setFormData({
+      name: `${protocol.name} (Copy)`,
+      service_type: protocol.service_type,
+      interval_months: protocol.interval_months?.toString() || '',
+      interval_miles: protocol.interval_miles?.toString() || '',
+      description: protocol.description || '',
+    });
+    setShowForm(true);
+  };
+
   const defaultProtocols = protocols.filter(p => p.is_default);
   const customProtocols = protocols.filter(p => !p.is_default);
 
@@ -247,7 +259,7 @@ export const Protocols = () => {
                 <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded">Default</span>
               </div>
               <p className="text-sm text-gray-600 mb-2">{protocol.service_type}</p>
-              <div className="flex gap-3 text-sm text-gray-700 mb-2">
+              <div className="flex gap-3 text-sm text-gray-700 mb-3">
                 {protocol.interval_months && (
                   <span className="bg-white px-2 py-1 rounded">📅 {protocol.interval_months} months</span>
                 )}
@@ -256,8 +268,17 @@ export const Protocols = () => {
                 )}
               </div>
               {protocol.description && (
-                <p className="text-xs text-gray-600 italic">{protocol.description}</p>
+                <p className="text-xs text-gray-600 italic mb-3">{protocol.description}</p>
               )}
+              <button
+                onClick={() => handleClone(protocol)}
+                className="w-full bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Clone This Protocol
+              </button>
             </div>
           ))}
         </div>
