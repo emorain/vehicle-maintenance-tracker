@@ -16,6 +16,7 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
     year: undefined,
     vin: '',
     license_plate: '',
+    engine: '',
     notes: '',
     image_url: '',
   });
@@ -50,6 +51,7 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
         make: decoded.make,
         model: decoded.model,
         year: decoded.year,
+        engine: decoded.engineType || prev.engine,
       }));
       setToast({ message: 'VIN decoded successfully!', type: 'success' });
     } catch (err: any) {
@@ -65,7 +67,7 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
     try {
       await VehicleService.addVehicle(vehicle);
       // Reset form
-      setVehicle({ make: '', model: '', year: undefined, vin: '', license_plate: '', notes: '', image_url: '' });
+      setVehicle({ make: '', model: '', year: undefined, vin: '', license_plate: '', engine: '', notes: '', image_url: '' });
       setToast({ message: 'Vehicle added successfully!', type: 'success' });
       onAdd(); // Refresh inventory
     } catch (err) {
@@ -145,6 +147,13 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
         name="license_plate"
         placeholder="License Plate (optional)"
         value={vehicle.license_plate || ''}
+        onChange={handleChange}
+        className="w-full border p-2 rounded"
+      />
+      <input
+        name="engine"
+        placeholder="Engine (optional, e.g., 2.0L 4-Cylinder)"
+        value={vehicle.engine || ''}
         onChange={handleChange}
         className="w-full border p-2 rounded"
       />

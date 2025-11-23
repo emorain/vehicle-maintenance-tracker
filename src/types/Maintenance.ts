@@ -8,6 +8,7 @@ export interface MaintenanceRecord {
   mileage?: number;
   cost?: number;
   notes?: string;
+  parts_used?: any[]; // JSONB array of parts
   created_at: string;
   updated_at: string;
 }

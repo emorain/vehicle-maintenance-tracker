@@ -1,7 +1,12 @@
-import { useState, FormEvent, ChangeEvent } from 'react';
+import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import { MaintenanceService } from '../services/MaintenanceService';
+import { VehicleService } from '../services/VehicleService';
+import { PartsService } from '../services/PartsService';
 import { MaintenanceRecord, SERVICE_TYPES } from '../types/Maintenance';
+import { Vehicle } from '../types/Vehicle';
+import { PartUsed } from '../types/Parts';
 import { Toast } from './Toast';
+import { PartsSelector } from './PartsSelector';
 
 interface MaintenanceFormProps {
   vehicleId: string;
@@ -16,6 +21,7 @@ export const MaintenanceForm = ({
   existingRecord,
   onCancel,
 }: MaintenanceFormProps) => {
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [formData, setFormData] = useState<Partial<MaintenanceRecord>>({
     vehicle_id: vehicleId,
     service_type: existingRecord?.service_type || '',
@@ -24,10 +30,25 @@ export const MaintenanceForm = ({
     mileage: existingRecord?.mileage || undefined,
     cost: existingRecord?.cost || undefined,
     notes: existingRecord?.notes || '',
+    parts_used: existingRecord?.parts_used || [],
   });
+  const [partsUsed, setPartsUsed] = useState<PartUsed[]>((existingRecord?.parts_used as PartUsed[]) || []);
 
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // Fetch vehicle information
+  useEffect(() => {
+    const fetchVehicle = async () => {
+      try {
+        const vehicleData = await VehicleService.getVehicleById(vehicleId);
+        setVehicle(vehicleData);
+      } catch (error) {
+        console.error('Failed to fetch vehicle:', error);
+      }
+    };
+    fetchVehicle();
+  }, [vehicleId]);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -60,12 +81,40 @@ export const MaintenanceForm = ({
     setLoading(true);
 
     try {
+      // Add parts to formData
+      const dataToSave = {
+        ...formData,
+        parts_used: partsUsed,
+      };
+
       if (existingRecord) {
-        await MaintenanceService.updateMaintenance(existingRecord.id, formData);
+        await MaintenanceService.updateMaintenance(existingRecord.id, dataToSave);
         setToast({ message: 'Maintenance record updated!', type: 'success' });
       } else {
-        await MaintenanceService.addMaintenance(formData);
+        await MaintenanceService.addMaintenance(dataToSave);
         setToast({ message: 'Maintenance record added!', type: 'success' });
+      }
+
+      // Add parts to community database (only for new parts)
+      if (vehicle && partsUsed.length > 0) {
+        for (const part of partsUsed) {
+          try {
+            await PartsService.addPart({
+              make: vehicle.make,
+              model: vehicle.model,
+              year_start: vehicle.year - 2, // Allow 2 years before
+              year_end: vehicle.year + 2, // Allow 2 years after
+              service_type: formData.service_type!,
+              part_type: part.type,
+              part_number: part.number,
+              brand: part.brand || null,
+              notes: null,
+            });
+          } catch (error) {
+            // Ignore duplicate errors (part already exists)
+            console.log('Part may already exist:', error);
+          }
+        }
       }
 
       setTimeout(() => {
@@ -183,6 +232,20 @@ export const MaintenanceForm = ({
             className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+
+        {/* Parts Selector */}
+        {vehicle && formData.service_type && (
+          <div className="border-t pt-4">
+            <PartsSelector
+              vehicleMake={vehicle.make}
+              vehicleModel={vehicle.model}
+              vehicleYear={vehicle.year}
+              serviceType={formData.service_type}
+              onPartsChange={setPartsUsed}
+              initialParts={partsUsed}
+            />
+          </div>
+        )}
 
         {/* Buttons */}
         <div className="flex gap-3">
