@@ -72,7 +72,7 @@ export const VehicleDetails = () => {
   const fetchMaintenanceRecords = async () => {
     if (!vehicle) return;
     try {
-      const records = await MaintenanceService.getMaintenanceRecords(vehicle.id);
+      const records = await MaintenanceService.getMaintenanceByVehicle(vehicle.id);
       setMaintenanceRecords(records);
     } catch (error) {
       console.error('Failed to fetch maintenance records:', error);
