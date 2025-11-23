@@ -19,9 +19,17 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
     engine: '',
     notes: '',
     images: [],
+    drive_type: '',
+    tire_size: '',
+    trim: '',
+    body_type: '',
+    transmission: '',
+    fuel_type: '',
+    optional_equipment: [],
   });
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [decodingVin, setDecodingVin] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -52,6 +60,11 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
         model: decoded.model,
         year: decoded.year,
         engine: decoded.engineType || prev.engine,
+        trim: decoded.trim || prev.trim,
+        body_type: decoded.bodyClass || prev.body_type,
+        transmission: decoded.transmission || prev.transmission,
+        drive_type: decoded.driveType || prev.drive_type,
+        fuel_type: decoded.fuelType || prev.fuel_type,
       }));
       setToast({ message: 'VIN decoded successfully!', type: 'success' });
     } catch (err: any) {
@@ -67,7 +80,24 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
     try {
       await VehicleService.addVehicle(vehicle);
       // Reset form
-      setVehicle({ make: '', model: '', year: undefined, vin: '', license_plate: '', engine: '', notes: '', images: [] });
+      setVehicle({
+        make: '',
+        model: '',
+        year: undefined,
+        vin: '',
+        license_plate: '',
+        engine: '',
+        notes: '',
+        images: [],
+        drive_type: '',
+        tire_size: '',
+        trim: '',
+        body_type: '',
+        transmission: '',
+        fuel_type: '',
+        optional_equipment: [],
+      });
+      setShowAdvanced(false);
       setToast({ message: 'Vehicle added successfully!', type: 'success' });
       onAdd(); // Refresh inventory
     } catch (err) {
@@ -157,6 +187,34 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
         onChange={handleChange}
         className="w-full border p-2 rounded"
       />
+
+      {/* Drive Type */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Drive Type</label>
+        <select
+          name="drive_type"
+          value={vehicle.drive_type || ''}
+          onChange={(e) => setVehicle(prev => ({ ...prev, drive_type: e.target.value }))}
+          className="w-full border p-2 rounded"
+        >
+          <option value="">Select Drive Type (optional)</option>
+          <option value="2WD">2WD (Two-Wheel Drive)</option>
+          <option value="FWD">FWD (Front-Wheel Drive)</option>
+          <option value="RWD">RWD (Rear-Wheel Drive)</option>
+          <option value="AWD">AWD (All-Wheel Drive)</option>
+          <option value="4WD">4WD (Four-Wheel Drive)</option>
+        </select>
+      </div>
+
+      {/* Tire Size */}
+      <input
+        name="tire_size"
+        placeholder="Tire Size (optional, e.g., 225/65R17)"
+        value={vehicle.tire_size || ''}
+        onChange={handleChange}
+        className="w-full border p-2 rounded"
+      />
+
       <textarea
         name="notes"
         placeholder="Notes"
@@ -176,6 +234,164 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
           maxImages={10}
         />
       </div>
+
+      {/* Advanced Details - Expandable Section */}
+      <div className="border-t pt-4">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="w-full flex items-center justify-between bg-gray-100 hover:bg-gray-200 px-4 py-3 rounded-lg font-medium text-gray-700 transition"
+        >
+          <span className="flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            Advanced Vehicle Details
+          </span>
+          <svg
+            className={`w-5 h-5 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {showAdvanced && (
+          <div className="mt-4 space-y-4 bg-gray-50 p-4 rounded-lg">
+            {/* Trim & Specifications */}
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                name="trim"
+                placeholder="Trim (e.g., LT, Sport, Limited)"
+                value={vehicle.trim || ''}
+                onChange={handleChange}
+                className="border p-2 rounded"
+              />
+              <select
+                name="body_type"
+                value={vehicle.body_type || ''}
+                onChange={(e) => setVehicle(prev => ({ ...prev, body_type: e.target.value }))}
+                className="border p-2 rounded"
+              >
+                <option value="">Body Type (optional)</option>
+                <option value="Sedan">Sedan</option>
+                <option value="Coupe">Coupe</option>
+                <option value="SUV">SUV</option>
+                <option value="Truck">Truck</option>
+                <option value="Van">Van</option>
+                <option value="Wagon">Wagon</option>
+                <option value="Convertible">Convertible</option>
+                <option value="Hatchback">Hatchback</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                name="transmission"
+                placeholder="Transmission (e.g., Automatic, Manual)"
+                value={vehicle.transmission || ''}
+                onChange={handleChange}
+                className="border p-2 rounded"
+              />
+              <select
+                name="fuel_type"
+                value={vehicle.fuel_type || ''}
+                onChange={(e) => setVehicle(prev => ({ ...prev, fuel_type: e.target.value }))}
+                className="border p-2 rounded"
+              >
+                <option value="">Fuel Type (optional)</option>
+                <option value="Gasoline">Gasoline</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Electric">Electric</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Plug-in Hybrid">Plug-in Hybrid</option>
+                <option value="Flex Fuel">Flex Fuel (E85)</option>
+              </select>
+            </div>
+
+            {/* Optional Equipment */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Optional Equipment</label>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {[
+                  'Leather Seats',
+                  'Heated Seats',
+                  'Cooled Seats',
+                  'Sunroof',
+                  'Moonroof',
+                  'Navigation System',
+                  'Backup Camera',
+                  'Blind Spot Monitoring',
+                  'Adaptive Cruise Control',
+                  'Parking Sensors',
+                  'Premium Audio',
+                  'Roof Rack',
+                  'Running Boards',
+                  'Towing Package',
+                  'Bed Liner',
+                  'Third Row Seating',
+                  'Power Liftgate',
+                  'Sport Suspension',
+                ].map((equipment) => (
+                  <label key={equipment} className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 rounded">
+                    <input
+                      type="checkbox"
+                      checked={vehicle.optional_equipment?.includes(equipment) || false}
+                      onChange={(e) => {
+                        const current = vehicle.optional_equipment || [];
+                        const updated = e.target.checked
+                          ? [...current, equipment]
+                          : current.filter(item => item !== equipment);
+                        setVehicle(prev => ({ ...prev, optional_equipment: updated }));
+                      }}
+                      className="rounded"
+                    />
+                    <span>{equipment}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Purchase Information */}
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Purchase Information</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Purchase Date</label>
+                  <input
+                    type="date"
+                    value={vehicle.purchase_date || ''}
+                    onChange={(e) => setVehicle(prev => ({ ...prev, purchase_date: e.target.value }))}
+                    className="w-full border p-2 rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Purchase Price</label>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    value={vehicle.purchase_price || ''}
+                    onChange={(e) => setVehicle(prev => ({ ...prev, purchase_price: e.target.value ? Number(e.target.value) : undefined }))}
+                    className="w-full border p-2 rounded"
+                  />
+                </div>
+              </div>
+              <div className="mt-3">
+                <label className="block text-xs text-gray-600 mb-1">Warranty Expiration</label>
+                <input
+                  type="date"
+                  value={vehicle.warranty_expiration || ''}
+                  onChange={(e) => setVehicle(prev => ({ ...prev, warranty_expiration: e.target.value }))}
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
         Add Vehicle
       </button>

@@ -191,7 +191,87 @@ export const VehicleDetails = () => {
                   <p className="font-semibold">{vehicle.mileage.toLocaleString()} mi</p>
                 </div>
               )}
+              {vehicle.trim && (
+                <div>
+                  <p className="text-gray-600">Trim</p>
+                  <p className="font-semibold">{vehicle.trim}</p>
+                </div>
+              )}
+              {vehicle.body_type && (
+                <div>
+                  <p className="text-gray-600">Body Type</p>
+                  <p className="font-semibold">{vehicle.body_type}</p>
+                </div>
+              )}
+              {vehicle.drive_type && (
+                <div>
+                  <p className="text-gray-600">Drive Type</p>
+                  <p className="font-semibold">{vehicle.drive_type}</p>
+                </div>
+              )}
+              {vehicle.tire_size && (
+                <div>
+                  <p className="text-gray-600">Tire Size</p>
+                  <p className="font-semibold">{vehicle.tire_size}</p>
+                </div>
+              )}
+              {vehicle.transmission && (
+                <div>
+                  <p className="text-gray-600">Transmission</p>
+                  <p className="font-semibold">{vehicle.transmission}</p>
+                </div>
+              )}
+              {vehicle.fuel_type && (
+                <div>
+                  <p className="text-gray-600">Fuel Type</p>
+                  <p className="font-semibold">{vehicle.fuel_type}</p>
+                </div>
+              )}
             </div>
+
+            {/* Optional Equipment */}
+            {vehicle.optional_equipment && vehicle.optional_equipment.length > 0 && (
+              <div className="mt-4">
+                <p className="text-gray-600 text-sm mb-2">Optional Equipment</p>
+                <div className="flex flex-wrap gap-2">
+                  {vehicle.optional_equipment.map((equipment, index) => (
+                    <span
+                      key={index}
+                      className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
+                    >
+                      {equipment}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Purchase Information */}
+            {(vehicle.purchase_date || vehicle.purchase_price || vehicle.warranty_expiration) && (
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-gray-600 text-sm font-medium mb-2">Purchase Information</p>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  {vehicle.purchase_date && (
+                    <div>
+                      <p className="text-gray-600">Purchase Date</p>
+                      <p className="font-semibold">{new Date(vehicle.purchase_date).toLocaleDateString()}</p>
+                    </div>
+                  )}
+                  {vehicle.purchase_price && (
+                    <div>
+                      <p className="text-gray-600">Purchase Price</p>
+                      <p className="font-semibold">${vehicle.purchase_price.toLocaleString()}</p>
+                    </div>
+                  )}
+                  {vehicle.warranty_expiration && (
+                    <div>
+                      <p className="text-gray-600">Warranty Expires</p>
+                      <p className="font-semibold">{new Date(vehicle.warranty_expiration).toLocaleDateString()}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {vehicle.notes && (
               <div className="mt-4">

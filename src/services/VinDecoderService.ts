@@ -8,6 +8,9 @@ export interface VinDecodeResult {
   engineType?: string;
   transmission?: string;
   bodyClass?: string;
+  driveType?: string;
+  fuelType?: string;
+  doors?: string;
 }
 
 export class VinDecoderService {
@@ -47,6 +50,9 @@ export class VinDecoderService {
       const engineType = getValue(13); // Engine Number of Cylinders
       const transmission = getValue(37); // Transmission Style
       const bodyClass = getValue(5); // Body Class
+      const driveType = getValue(15); // Drive Type (AWD, 4WD, FWD, RWD)
+      const fuelType = getValue(24); // Fuel Type - Primary
+      const doors = getValue(14); // Number of Doors
 
       if (!make || !model || !year) {
         throw new Error('Could not decode essential vehicle information from VIN.');
@@ -60,6 +66,9 @@ export class VinDecoderService {
         engineType: engineType || undefined,
         transmission: transmission || undefined,
         bodyClass: bodyClass || undefined,
+        driveType: driveType || undefined,
+        fuelType: fuelType || undefined,
+        doors: doors || undefined,
       };
     } catch (error: any) {
       if (error.message.includes('Invalid VIN') || error.message.includes('Could not decode')) {

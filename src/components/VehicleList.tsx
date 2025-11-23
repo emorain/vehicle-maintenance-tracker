@@ -63,6 +63,12 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
       mileage: vehicle.mileage,
       notes: vehicle.notes,
       images: vehicle.images,
+      drive_type: vehicle.drive_type,
+      tire_size: vehicle.tire_size,
+      trim: vehicle.trim,
+      body_type: vehicle.body_type,
+      transmission: vehicle.transmission,
+      fuel_type: vehicle.fuel_type,
     });
   };
 
@@ -148,6 +154,25 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
                   placeholder="Mileage"
                   className="border p-2 rounded"
                 />
+                <select
+                  value={editForm.drive_type || ''}
+                  onChange={(e) => setEditForm({ ...editForm, drive_type: e.target.value })}
+                  className="border p-2 rounded"
+                >
+                  <option value="">Drive Type (optional)</option>
+                  <option value="2WD">2WD</option>
+                  <option value="FWD">FWD</option>
+                  <option value="RWD">RWD</option>
+                  <option value="AWD">AWD</option>
+                  <option value="4WD">4WD</option>
+                </select>
+                <input
+                  type="text"
+                  value={editForm.tire_size || ''}
+                  onChange={(e) => setEditForm({ ...editForm, tire_size: e.target.value })}
+                  placeholder="Tire Size (e.g., 225/65R17)"
+                  className="border p-2 rounded"
+                />
               </div>
               <input
                 type="text"
@@ -193,12 +218,20 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
             <div>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <h2 className="font-bold text-lg">{vehicle.year} {vehicle.make} {vehicle.model}</h2>
-                  {vehicle.license_plate && <p className="text-gray-600">License: {vehicle.license_plate}</p>}
-                  {vehicle.vin && <p className="text-sm text-gray-500">VIN: {vehicle.vin}</p>}
-                  {vehicle.color && <p>Color: {vehicle.color}</p>}
-                  {vehicle.mileage && <p>Mileage: {vehicle.mileage.toLocaleString()} miles</p>}
-                  {vehicle.notes && <p className="mt-2 text-gray-700">Notes: {vehicle.notes}</p>}
+                  <h2 className="font-bold text-lg">
+                    {vehicle.year} {vehicle.make} {vehicle.model}
+                    {vehicle.trim && <span className="text-gray-600 font-normal ml-2">({vehicle.trim})</span>}
+                  </h2>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm">
+                    {vehicle.license_plate && <p className="text-gray-600">License: {vehicle.license_plate}</p>}
+                    {vehicle.body_type && <p className="text-gray-600">{vehicle.body_type}</p>}
+                    {vehicle.drive_type && <p className="text-gray-600">{vehicle.drive_type}</p>}
+                    {vehicle.tire_size && <p className="text-gray-600">Tires: {vehicle.tire_size}</p>}
+                  </div>
+                  {vehicle.vin && <p className="text-sm text-gray-500 mt-1">VIN: {vehicle.vin}</p>}
+                  {vehicle.color && <p className="text-sm">Color: {vehicle.color}</p>}
+                  {vehicle.mileage && <p className="text-sm">Mileage: {vehicle.mileage.toLocaleString()} miles</p>}
+                  {vehicle.notes && <p className="mt-2 text-gray-700 text-sm">Notes: {vehicle.notes}</p>}
                 </div>
                 <div className="flex gap-2 ml-4">
                   <Link
