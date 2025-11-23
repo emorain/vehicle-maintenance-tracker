@@ -18,7 +18,7 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
     license_plate: '',
     engine: '',
     notes: '',
-    image_url: '',
+    images: [],
   });
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [decodingVin, setDecodingVin] = useState(false);
@@ -67,7 +67,7 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
     try {
       await VehicleService.addVehicle(vehicle);
       // Reset form
-      setVehicle({ make: '', model: '', year: undefined, vin: '', license_plate: '', engine: '', notes: '', image_url: '' });
+      setVehicle({ make: '', model: '', year: undefined, vin: '', license_plate: '', engine: '', notes: '', images: [] });
       setToast({ message: 'Vehicle added successfully!', type: 'success' });
       onAdd(); // Refresh inventory
     } catch (err) {
@@ -168,12 +168,12 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
       {/* Image Upload */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Vehicle Photo
+          Vehicle Photos
         </label>
         <ImageUpload
-          currentImageUrl={vehicle.image_url}
-          onImageUpload={(url) => setVehicle(prev => ({ ...prev, image_url: url }))}
-          onImageRemove={() => setVehicle(prev => ({ ...prev, image_url: '' }))}
+          currentImages={vehicle.images || []}
+          onImagesChange={(urls) => setVehicle(prev => ({ ...prev, images: urls }))}
+          maxImages={10}
         />
       </div>
       <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { VehicleService } from '../services/VehicleService';
+import { MaintenanceService } from '../services/MaintenanceService';
 import { Vehicle } from '../types/Vehicle';
+import { MaintenanceRecord } from '../types/Maintenance';
 import { MaintenanceForm } from '../components/MaintenanceForm';
 import { MaintenanceList } from '../components/MaintenanceList';
 import { ProtocolAssignment } from '../components/ProtocolAssignment';
@@ -10,6 +12,7 @@ import { FuelRecordWithMPG, FuelStats as FuelStatsType } from '../types/Fuel';
 import { FuelForm } from '../components/FuelForm';
 import { FuelList } from '../components/FuelList';
 import { FuelStats } from '../components/FuelStats';
+import { ExportService } from '../services/ExportService';
 
 export const VehicleDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +26,7 @@ export const VehicleDetails = () => {
   const [fuelStats, setFuelStats] = useState<FuelStatsType | null>(null);
   const [showFuelForm, setShowFuelForm] = useState(false);
   const [editingFuel, setEditingFuel] = useState<FuelRecordWithMPG | null>(null);
+  const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
 
   const fetchVehicle = async () => {
     if (!id) return;
@@ -65,9 +69,30 @@ export const VehicleDetails = () => {
     setActiveTab('fuel');
   };
 
+  const fetchMaintenanceRecords = async () => {
+    if (!vehicle) return;
+    try {
+      const records = await MaintenanceService.getMaintenanceRecords(vehicle.id);
+      setMaintenanceRecords(records);
+    } catch (error) {
+      console.error('Failed to fetch maintenance records:', error);
+    }
+  };
+
+  const handleExportPDF = () => {
+    if (!vehicle) return;
+    ExportService.exportMaintenanceHistory(vehicle, maintenanceRecords, fuelRecords, fuelStats || undefined);
+  };
+
   useEffect(() => {
     fetchVehicle();
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (vehicle) {
+      fetchMaintenanceRecords();
+    }
+  }, [vehicle, refreshKey]);
 
   useEffect(() => {
     if (vehicle) {
@@ -99,22 +124,47 @@ export const VehicleDetails = () => {
       {/* Vehicle Header */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex flex-col md:flex-row gap-6">
-          {/* Vehicle Image */}
-          {vehicle.image_url && (
+          {/* Vehicle Images Gallery */}
+          {vehicle.images && vehicle.images.length > 0 && (
             <div className="md:w-1/3">
-              <img
-                src={vehicle.image_url}
-                alt={`${vehicle.make} ${vehicle.model}`}
-                className="w-full h-64 object-cover rounded-lg"
-              />
+              {vehicle.images.length === 1 ? (
+                <img
+                  src={vehicle.images[0]}
+                  alt={`${vehicle.make} ${vehicle.model}`}
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {vehicle.images.map((imageUrl, index) => (
+                    <img
+                      key={index}
+                      src={imageUrl}
+                      alt={`${vehicle.make} ${vehicle.model} - ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90 transition"
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
           {/* Vehicle Info */}
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              {vehicle.year} {vehicle.make} {vehicle.model}
-            </h1>
+            <div className="flex justify-between items-start mb-4">
+              <h1 className="text-3xl font-bold text-gray-900">
+                {vehicle.year} {vehicle.make} {vehicle.model}
+              </h1>
+              <button
+                onClick={handleExportPDF}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 flex items-center gap-2"
+                title="Export complete maintenance history to PDF"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export PDF
+              </button>
+            </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
               {vehicle.license_plate && (

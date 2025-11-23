@@ -62,7 +62,7 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
       color: vehicle.color,
       mileage: vehicle.mileage,
       notes: vehicle.notes,
-      image_url: vehicle.image_url,
+      images: vehicle.images,
     });
   };
 
@@ -165,12 +165,12 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
               />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vehicle Photo
+                  Vehicle Photos
                 </label>
                 <ImageUpload
-                  currentImageUrl={editForm.image_url}
-                  onImageUpload={(url) => setEditForm({ ...editForm, image_url: url })}
-                  onImageRemove={() => setEditForm({ ...editForm, image_url: '' })}
+                  currentImages={editForm.images || []}
+                  onImagesChange={(urls) => setEditForm({ ...editForm, images: urls })}
+                  maxImages={10}
                 />
               </div>
               <div className="flex gap-2">
@@ -221,8 +221,27 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
                   </button>
                 </div>
               </div>
-              {vehicle.image_url && (
-                <img src={vehicle.image_url} alt={`${vehicle.make} ${vehicle.model}`} className="mt-2 max-w-xs rounded" />
+              {vehicle.images && vehicle.images.length > 0 && (
+                <div className="mt-3">
+                  {vehicle.images.length === 1 ? (
+                    <img
+                      src={vehicle.images[0]}
+                      alt={`${vehicle.make} ${vehicle.model}`}
+                      className="max-w-xs rounded-lg"
+                    />
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-w-md">
+                      {vehicle.images.map((imageUrl, index) => (
+                        <img
+                          key={index}
+                          src={imageUrl}
+                          alt={`${vehicle.make} ${vehicle.model} - ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}
