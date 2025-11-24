@@ -49,7 +49,7 @@ export const Dashboard = () => {
 
       {/* Upcoming/Overdue Maintenance */}
       {!loading && !error && maintenanceDue.length > 0 && (
-        <div className="mb-6">
+        <div className="mb-6" data-reminders>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Maintenance Reminders</h2>
 
           {/* Overdue Maintenance */}
