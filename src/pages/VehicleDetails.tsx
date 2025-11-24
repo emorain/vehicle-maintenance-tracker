@@ -150,23 +150,23 @@ export const VehicleDetails = () => {
 
           {/* Vehicle Info */}
           <div className="flex-1">
-            <div className="flex justify-between items-start mb-4">
-              <h1 className="text-3xl font-bold text-gray-900">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-4">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 {vehicle.year} {vehicle.make} {vehicle.model}
               </h1>
               <button
                 onClick={handleExportPDF}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 flex items-center gap-2"
+                className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 flex items-center gap-2 w-full sm:w-auto justify-center sm:flex-shrink-0"
                 title="Export complete maintenance history to PDF"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Export PDF
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               {vehicle.license_plate && (
                 <div>
                   <p className="text-gray-600">License Plate</p>
@@ -250,7 +250,7 @@ export const VehicleDetails = () => {
             {(vehicle.purchase_date || vehicle.purchase_price || vehicle.warranty_expiration) && (
               <div className="mt-4 pt-4 border-t">
                 <p className="text-gray-600 text-sm font-medium mb-2">Purchase Information</p>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   {vehicle.purchase_date && (
                     <div>
                       <p className="text-gray-600">Purchase Date</p>

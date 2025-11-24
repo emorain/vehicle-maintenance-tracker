@@ -11,8 +11,8 @@ export const Inventory = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Vehicle Inventory</h1>
+    <div className="max-w-4xl mx-auto p-3 sm:p-6">
+      <h1 className="text-xl sm:text-2xl font-bold mb-4">Vehicle Inventory</h1>
       <VehicleForm onAdd={handleAddVehicle} />
       <VehicleList refreshKey={refreshKey} /> {/* Pass refreshKey as prop */}
     </div>

@@ -32,12 +32,12 @@ export const Dashboard = () => {
   }, []);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">Dashboard Overview</h2>
+    <div className="p-3 sm:p-6 max-w-6xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard Overview</h2>
         <Link
           to="/inventory"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="w-full sm:w-auto text-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           Manage Inventory
         </Link>
@@ -66,7 +66,7 @@ export const Dashboard = () => {
                   .map((maintenance, index) => {
                     const vehicle = vehicles.find(v => v.id === maintenance.vehicle_id);
                     return (
-                      <div key={index} className="bg-white rounded p-3 flex justify-between items-center">
+                      <div key={index} className="bg-white rounded p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div>
                           <p className="font-semibold text-gray-800">{maintenance.protocol_name}</p>
                           <p className="text-sm text-gray-600">
@@ -85,7 +85,7 @@ export const Dashboard = () => {
                         </div>
                         <Link
                           to={`/vehicle/${maintenance.vehicle_id}`}
-                          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm"
+                          className="w-full sm:w-auto text-center bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm"
                         >
                           View Vehicle
                         </Link>
@@ -120,7 +120,7 @@ export const Dashboard = () => {
                   .map((maintenance, index) => {
                     const vehicle = vehicles.find(v => v.id === maintenance.vehicle_id);
                     return (
-                      <div key={index} className="bg-white rounded p-3 flex justify-between items-center">
+                      <div key={index} className="bg-white rounded p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div>
                           <p className="font-semibold text-gray-800">{maintenance.protocol_name}</p>
                           <p className="text-sm text-gray-600">
@@ -139,7 +139,7 @@ export const Dashboard = () => {
                         </div>
                         <Link
                           to={`/vehicle/${maintenance.vehicle_id}`}
-                          className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 text-sm"
+                          className="w-full sm:w-auto text-center bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 text-sm"
                         >
                           View Vehicle
                         </Link>

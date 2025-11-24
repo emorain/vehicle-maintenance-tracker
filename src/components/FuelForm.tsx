@@ -113,7 +113,7 @@ export const FuelForm = ({
         </h3>
 
         {/* Fill Date & Odometer */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Fill Date <span className="text-red-500">*</span>
@@ -146,7 +146,7 @@ export const FuelForm = ({
         </div>
 
         {/* Gallons & Price per Gallon */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Gallons <span className="text-red-500">*</span>
@@ -200,7 +200,7 @@ export const FuelForm = ({
         </div>
 
         {/* Station Name & Location */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Station Name
@@ -237,7 +237,7 @@ export const FuelForm = ({
         </div>
 
         {/* Fuel Grade & Trip Type */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Fuel Grade
