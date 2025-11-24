@@ -14,6 +14,24 @@ import { FuelList } from '../components/FuelList';
 import { FuelStats } from '../components/FuelStats';
 import { ExportService } from '../services/ExportService';
 
+// Helper function to get status badge color
+const getStatusColor = (status?: Vehicle['status']) => {
+  switch (status) {
+    case 'Active':
+      return 'bg-green-100 text-green-800 border-green-300';
+    case 'Inactive':
+      return 'bg-gray-100 text-gray-800 border-gray-300';
+    case 'Sold':
+      return 'bg-blue-100 text-blue-800 border-blue-300';
+    case 'Stored':
+      return 'bg-purple-100 text-purple-800 border-purple-300';
+    case 'In Repair':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    default:
+      return 'bg-green-100 text-green-800 border-green-300';
+  }
+};
+
 export const VehicleDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -151,9 +169,14 @@ export const VehicleDetails = () => {
           {/* Vehicle Info */}
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-4">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                {vehicle.year} {vehicle.make} {vehicle.model}
-              </h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  {vehicle.year} {vehicle.make} {vehicle.model}
+                </h1>
+                <span className={`px-2 py-1 text-xs font-semibold rounded border ${getStatusColor(vehicle.status)}`}>
+                  {vehicle.status || 'Active'}
+                </span>
+              </div>
               <button
                 onClick={handleExportPDF}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 flex items-center gap-2 w-full sm:w-auto justify-center sm:flex-shrink-0"

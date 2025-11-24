@@ -1,7 +1,7 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 import { VehicleService } from '../services/VehicleService';
 import { VinDecoderService } from '../services/VinDecoderService';
-import { Vehicle } from '../types/Vehicle';
+import { Vehicle, VEHICLE_STATUSES, VEHICLE_TYPES } from '../types/Vehicle';
 import { Toast } from './Toast';
 import { ImageUpload } from './ImageUpload';
 
@@ -26,6 +26,9 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
     transmission: '',
     fuel_type: '',
     optional_equipment: [],
+    status: 'Active',
+    vehicle_type: undefined,
+    custom_type: '',
   });
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [decodingVin, setDecodingVin] = useState(false);
@@ -96,6 +99,9 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
         transmission: '',
         fuel_type: '',
         optional_equipment: [],
+        status: 'Active',
+        vehicle_type: undefined,
+        custom_type: '',
       });
       setShowAdvanced(false);
       setToast({ message: 'Vehicle added successfully!', type: 'success' });
@@ -134,6 +140,46 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
         onChange={handleChange}
         className="w-full border p-2 rounded"
       />
+
+      {/* Vehicle Type */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Equipment Type</label>
+        <select
+          name="vehicle_type"
+          value={vehicle.vehicle_type || ''}
+          onChange={(e) => {
+            const value = e.target.value as Vehicle['vehicle_type'];
+            setVehicle(prev => ({
+              ...prev,
+              vehicle_type: value,
+              custom_type: value !== 'Other' ? '' : prev.custom_type
+            }));
+          }}
+          className="w-full border p-2 rounded"
+        >
+          <option value="">Select Type (optional)</option>
+          {VEHICLE_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Custom Type Input (shown when "Other" is selected) */}
+      {vehicle.vehicle_type === 'Other' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Custom Equipment Type</label>
+          <input
+            type="text"
+            name="custom_type"
+            placeholder="Enter custom equipment type (e.g., Forklift, Excavator)"
+            value={vehicle.custom_type || ''}
+            onChange={handleChange}
+            className="w-full border p-2 rounded"
+          />
+        </div>
+      )}
 
       {/* VIN Input with Decode Button */}
       <div className="space-y-2">
@@ -215,6 +261,24 @@ export const VehicleForm = ({ onAdd }: VehicleFormProps) => {
         onChange={handleChange}
         className="w-full border p-2 rounded"
       />
+
+      {/* Vehicle Status */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Status</label>
+        <select
+          name="status"
+          value={vehicle.status || 'Active'}
+          onChange={(e) => setVehicle(prev => ({ ...prev, status: e.target.value as Vehicle['status'] }))}
+          className="w-full border p-2 rounded"
+        >
+          {VEHICLE_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 mt-1">Track the current state of this vehicle</p>
+      </div>
 
       <textarea
         name="notes"

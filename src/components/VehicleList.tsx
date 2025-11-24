@@ -2,10 +2,28 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { VehicleService } from '../services/VehicleService';
-import { Vehicle } from '../types/Vehicle';
+import { Vehicle, VEHICLE_STATUSES } from '../types/Vehicle';
 import { Toast } from './Toast';
 import { ConfirmModal } from './ConfirmModal';
 import { ImageUpload } from './ImageUpload';
+
+// Helper function to get status badge color
+const getStatusColor = (status?: Vehicle['status']) => {
+  switch (status) {
+    case 'Active':
+      return 'bg-green-100 text-green-800 border-green-300';
+    case 'Inactive':
+      return 'bg-gray-100 text-gray-800 border-gray-300';
+    case 'Sold':
+      return 'bg-blue-100 text-blue-800 border-blue-300';
+    case 'Stored':
+      return 'bg-purple-100 text-purple-800 border-purple-300';
+    case 'In Repair':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    default:
+      return 'bg-green-100 text-green-800 border-green-300';
+  }
+};
 
 interface VehicleListProps {
   refreshKey?: number;
@@ -19,6 +37,8 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
   const [editForm, setEditForm] = useState<Partial<Vehicle>>({});
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<Vehicle['status'] | 'All'>('All');
 
   const fetchVehicles = async () => {
     setLoading(true);
@@ -69,6 +89,7 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
       body_type: vehicle.body_type,
       transmission: vehicle.transmission,
       fuel_type: vehicle.fuel_type,
+      status: vehicle.status,
     });
   };
 
@@ -90,9 +111,25 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
     }
   };
 
+  // Filter vehicles based on search and status
+  const filteredVehicles = vehicles.filter(vehicle => {
+    // Search filter
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = searchQuery === '' ||
+      vehicle.make.toLowerCase().includes(searchLower) ||
+      vehicle.model.toLowerCase().includes(searchLower) ||
+      vehicle.year.toString().includes(searchLower) ||
+      vehicle.license_plate?.toLowerCase().includes(searchLower) ||
+      vehicle.vin?.toLowerCase().includes(searchLower);
+
+    // Status filter
+    const matchesStatus = statusFilter === 'All' || vehicle.status === statusFilter || (!vehicle.status && statusFilter === 'Active');
+
+    return matchesSearch && matchesStatus;
+  });
+
   if (loading) return <p>Loading vehicles...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
-  if (vehicles.length === 0) return <p>No vehicles in inventory yet.</p>;
 
   return (
     <>
@@ -105,8 +142,65 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
           onCancel={() => setDeleteConfirm(null)}
         />
       )}
-      <div className="space-y-4 mt-6">
-      {vehicles.map(vehicle => (
+
+      {/* Search and Filter Bar */}
+      {vehicles.length > 0 && (
+        <div className="mt-6 mb-4 space-y-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Search Input */}
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search vehicles (make, model, year, license, VIN)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div className="sm:w-48">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as Vehicle['status'] | 'All')}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="All">All Status</option>
+                {VEHICLE_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Results count */}
+          <p className="text-sm text-gray-600">
+            Showing {filteredVehicles.length} of {vehicles.length} vehicle{vehicles.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+      )}
+
+      {filteredVehicles.length === 0 && vehicles.length > 0 && (
+        <div className="text-center py-8 text-gray-500">
+          <p>No vehicles match your search criteria.</p>
+          <button
+            onClick={() => {
+              setSearchQuery('');
+              setStatusFilter('All');
+            }}
+            className="mt-2 text-blue-600 hover:text-blue-800 underline"
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
+
+      {vehicles.length === 0 && <p>No vehicles in inventory yet.</p>}
+
+      <div className="space-y-4">
+      {filteredVehicles.map(vehicle => (
         <div key={vehicle.id} className="border p-4 rounded shadow bg-white">
           {editingId === vehicle.id ? (
             // Edit Mode
@@ -173,6 +267,17 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
                   placeholder="Tire Size (e.g., 225/65R17)"
                   className="border p-2 rounded"
                 />
+                <select
+                  value={editForm.status || 'Active'}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value as Vehicle['status'] })}
+                  className="border p-2 rounded"
+                >
+                  {VEHICLE_STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
               </div>
               <input
                 type="text"
@@ -218,10 +323,15 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
             <div>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <h2 className="font-bold text-lg">
-                    {vehicle.year} {vehicle.make} {vehicle.model}
-                    {vehicle.trim && <span className="text-gray-600 font-normal ml-2">({vehicle.trim})</span>}
-                  </h2>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h2 className="font-bold text-lg">
+                      {vehicle.year} {vehicle.make} {vehicle.model}
+                      {vehicle.trim && <span className="text-gray-600 font-normal ml-2">({vehicle.trim})</span>}
+                    </h2>
+                    <span className={`px-2 py-0.5 text-xs font-semibold rounded border ${getStatusColor(vehicle.status)}`}>
+                      {vehicle.status || 'Active'}
+                    </span>
+                  </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm">
                     {vehicle.license_plate && <p className="text-gray-600">License: {vehicle.license_plate}</p>}
                     {vehicle.body_type && <p className="text-gray-600">{vehicle.body_type}</p>}

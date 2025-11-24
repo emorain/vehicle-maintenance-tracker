@@ -4,6 +4,7 @@ import { ProtocolService } from '../services/ProtocolService';
 import { Vehicle } from '../types/Vehicle';
 import { MaintenanceDue } from '../types/Protocol';
 import { Link } from 'react-router-dom';
+import { Analytics } from '../components/Analytics';
 
 export const Dashboard = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -161,6 +162,13 @@ export const Dashboard = () => {
           >
             Add Your First Vehicle
           </Link>
+        </div>
+      )}
+
+      {/* Analytics Section */}
+      {!loading && !error && vehicles.length > 0 && (
+        <div className="mb-8">
+          <Analytics />
         </div>
       )}
 

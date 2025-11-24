@@ -9,6 +9,7 @@ export interface MaintenanceRecord {
   cost?: number;
   notes?: string;
   parts_used?: any[]; // JSONB array of parts
+  receipts?: string[]; // Array of receipt/document URLs (images or PDFs)
   created_at: string;
   updated_at: string;
 }

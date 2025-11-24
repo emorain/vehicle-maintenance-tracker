@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MaintenanceService } from '../services/MaintenanceService';
-import { MaintenanceRecord } from '../types/Maintenance';
+import { MaintenanceRecord, SERVICE_TYPES } from '../types/Maintenance';
 import { Toast } from './Toast';
 import { ConfirmModal } from './ConfirmModal';
 import { MaintenanceForm } from './MaintenanceForm';
@@ -18,6 +18,8 @@ export const MaintenanceList = ({ vehicleId, refreshKey }: MaintenanceListProps)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [totalCost, setTotalCost] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [serviceTypeFilter, setServiceTypeFilter] = useState<string>('All');
 
   const fetchRecords = async () => {
     setLoading(true);
@@ -71,6 +73,24 @@ export const MaintenanceList = ({ vehicleId, refreshKey }: MaintenanceListProps)
     }).format(amount);
   };
 
+  // Filter maintenance records
+  const filteredRecords = records.filter(record => {
+    // Search filter
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = searchQuery === '' ||
+      record.service_type.toLowerCase().includes(searchLower) ||
+      record.description?.toLowerCase().includes(searchLower) ||
+      record.notes?.toLowerCase().includes(searchLower);
+
+    // Service type filter
+    const matchesServiceType = serviceTypeFilter === 'All' || record.service_type === serviceTypeFilter;
+
+    return matchesSearch && matchesServiceType;
+  });
+
+  // Calculate filtered total cost
+  const filteredTotalCost = filteredRecords.reduce((sum, record) => sum + (record.cost || 0), 0);
+
   if (loading) return <p className="text-gray-600">Loading maintenance records...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
@@ -104,16 +124,65 @@ export const MaintenanceList = ({ vehicleId, refreshKey }: MaintenanceListProps)
       )}
 
       <div className="space-y-4">
+        {/* Search and Filter */}
+        {records.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Search Input */}
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder="Search maintenance records (service type, description, notes)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Service Type Filter */}
+              <div className="sm:w-56">
+                <select
+                  value={serviceTypeFilter}
+                  onChange={(e) => setServiceTypeFilter(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="All">All Service Types</option>
+                  {SERVICE_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Results count */}
+            <p className="text-sm text-gray-600">
+              Showing {filteredRecords.length} of {records.length} record{records.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+        )}
+
         {/* Summary Stats */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600">Total Records</p>
-              <p className="text-2xl font-bold text-blue-600">{records.length}</p>
+              <p className="text-sm text-gray-600">
+                {searchQuery || serviceTypeFilter !== 'All' ? 'Filtered' : 'Total'} Records
+              </p>
+              <p className="text-2xl font-bold text-blue-600">{filteredRecords.length}</p>
+              {(searchQuery || serviceTypeFilter !== 'All') && filteredRecords.length !== records.length && (
+                <p className="text-xs text-gray-500">of {records.length} total</p>
+              )}
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total Cost</p>
-              <p className="text-2xl font-bold text-green-600">{formatCurrency(totalCost)}</p>
+              <p className="text-sm text-gray-600">
+                {searchQuery || serviceTypeFilter !== 'All' ? 'Filtered' : 'Total'} Cost
+              </p>
+              <p className="text-2xl font-bold text-green-600">{formatCurrency(filteredTotalCost)}</p>
+              {(searchQuery || serviceTypeFilter !== 'All') && filteredTotalCost !== totalCost && (
+                <p className="text-xs text-gray-500">of {formatCurrency(totalCost)}</p>
+              )}
             </div>
           </div>
         </div>
@@ -123,9 +192,22 @@ export const MaintenanceList = ({ vehicleId, refreshKey }: MaintenanceListProps)
           <p className="text-gray-500 text-center py-8">
             No maintenance records yet. Add your first service record above!
           </p>
+        ) : filteredRecords.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <p>No maintenance records match your search criteria.</p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setServiceTypeFilter('All');
+              }}
+              className="mt-2 text-blue-600 hover:text-blue-800 underline"
+            >
+              Clear filters
+            </button>
+          </div>
         ) : (
           <div className="space-y-3">
-            {records.map((record) => (
+            {filteredRecords.map((record) => (
               <div
                 key={record.id}
                 className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
@@ -159,10 +241,50 @@ export const MaintenanceList = ({ vehicleId, refreshKey }: MaintenanceListProps)
                         Note: {record.notes}
                       </p>
                     )}
+
+                    {/* Receipts/Documents */}
+                    {record.receipts && record.receipts.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs text-gray-500 mb-2">📎 Attached Documents ({record.receipts.length})</p>
+                        <div className="flex flex-wrap gap-2">
+                          {record.receipts.map((url, index) => (
+                            <a
+                              key={index}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded border border-gray-300"
+                            >
+                              📄 Document {index + 1}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Action Buttons */}
                   <div className="flex gap-2 ml-4">
+                    <button
+                      onClick={() => {
+                        // Create a template from this record with today's date
+                        const template: MaintenanceRecord = {
+                          ...record,
+                          id: '', // Will be generated on save
+                          service_date: new Date().toISOString().split('T')[0],
+                          mileage: undefined, // User should enter current mileage
+                          cost: record.cost, // Keep same cost as reference
+                          created_at: '', // Will be generated
+                        };
+                        setEditingRecord(template);
+                      }}
+                      className="text-green-600 hover:text-green-800 p-2"
+                      title="Repeat this service"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
                     <button
                       onClick={() => setEditingRecord(record)}
                       className="text-blue-600 hover:text-blue-800 p-2"

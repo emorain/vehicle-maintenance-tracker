@@ -7,6 +7,7 @@ import { Vehicle } from '../types/Vehicle';
 import { PartUsed } from '../types/Parts';
 import { Toast } from './Toast';
 import { PartsSelector } from './PartsSelector';
+import { ImageUpload } from './ImageUpload';
 
 interface MaintenanceFormProps {
   vehicleId: string;
@@ -31,6 +32,7 @@ export const MaintenanceForm = ({
     cost: existingRecord?.cost || undefined,
     notes: existingRecord?.notes || '',
     parts_used: existingRecord?.parts_used || [],
+    receipts: existingRecord?.receipts || [],
   });
   const [partsUsed, setPartsUsed] = useState<PartUsed[]>((existingRecord?.parts_used as PartUsed[]) || []);
 
@@ -231,6 +233,19 @@ export const MaintenanceForm = ({
             rows={3}
             className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        </div>
+
+        {/* Receipts/Documents Upload */}
+        <div className="border-t pt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Receipts & Documents
+          </label>
+          <ImageUpload
+            currentImages={formData.receipts || []}
+            onImagesChange={(urls) => setFormData(prev => ({ ...prev, receipts: urls }))}
+            maxImages={5}
+          />
+          <p className="text-xs text-gray-500 mt-1">Upload receipts, invoices, or other documents (images or PDFs)</p>
         </div>
 
         {/* Parts Selector */}
