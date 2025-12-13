@@ -215,7 +215,7 @@ export class ExportService {
       for (const vehicle of vehicles) {
         const [maintenance, fuel] = await Promise.all([
           MaintenanceService.getMaintenanceByVehicle(vehicle.id),
-          FuelService.getFuelByVehicle(vehicle.id),
+          FuelService.getFuelRecords(vehicle.id),
         ]);
         maintenanceRecords.push(...maintenance);
         fuelRecords.push(...fuel);
@@ -367,8 +367,8 @@ export class ExportService {
     const allRecords: any[] = [];
 
     for (const vehicle of vehicles) {
-      const records = await FuelService.getFuelByVehicle(vehicle.id);
-      records.forEach(record => {
+      const records = await FuelService.getFuelRecords(vehicle.id);
+      records.forEach((record: any) => {
         allRecords.push({
           ...record,
           vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`
