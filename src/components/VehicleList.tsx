@@ -248,7 +248,7 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
                   type="number"
                   value={editForm.mileage || ''}
                   onChange={(e) => setEditForm({ ...editForm, mileage: Number(e.target.value) })}
-                  placeholder={`Mileage (${getDistanceUnitLabel(settings)})`}
+                  placeholder={`Odometer (${getDistanceUnitLabel(settings)})`}
                   className="border p-2 rounded"
                 />
                 <select
@@ -343,7 +343,7 @@ export const VehicleList = ({ refreshKey }: VehicleListProps) => {
                   </div>
                   {vehicle.vin && <p className="text-sm text-gray-500 mt-1">VIN: {vehicle.vin}</p>}
                   {vehicle.color && <p className="text-sm">Color: {vehicle.color}</p>}
-                  {vehicle.mileage && <p className="text-sm">Mileage: {formatDistance(vehicle.mileage, settings)}</p>}
+                  {vehicle.mileage && <p className="text-sm">Odometer: {formatDistance(vehicle.mileage, settings)}</p>}
                   {vehicle.notes && <p className="mt-2 text-gray-700 text-sm">Notes: {vehicle.notes}</p>}
                 </div>
                 <div className="flex gap-2 ml-4">

@@ -191,16 +191,16 @@ export const MaintenanceForm = ({
           />
         </div>
 
-        {/* Mileage & Cost */}
+        {/* Odometer & Cost */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {settings.distance_unit === 'kilometers' ? 'Odometer' : 'Mileage'} ({getDistanceUnitLabel(settings)}) (optional)
+              Odometer ({getDistanceUnitLabel(settings)}) (optional)
             </label>
             <input
               type="number"
               name="mileage"
-              placeholder={`Current ${settings.distance_unit === 'kilometers' ? 'kilometers' : 'mileage'}`}
+              placeholder={`Current odometer reading`}
               value={formData.mileage || ''}
               onChange={handleChange}
               min="0"
