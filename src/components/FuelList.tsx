@@ -4,6 +4,8 @@ import { FuelService } from '../services/FuelService';
 import { FuelRecordWithMPG } from '../types/Fuel';
 import { ConfirmModal } from './ConfirmModal';
 import { Toast } from './Toast';
+import { useSettings } from '../contexts/SettingsContext';
+import { formatDistance, formatFuelVolume, formatFuelEconomy } from '../utils/unitConversions';
 
 interface FuelListProps {
   records: FuelRecordWithMPG[];
@@ -12,6 +14,7 @@ interface FuelListProps {
 }
 
 export const FuelList = ({ records, onEdit, onRefresh }: FuelListProps) => {
+  const { settings } = useSettings();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -74,28 +77,28 @@ export const FuelList = ({ records, onEdit, onRefresh }: FuelListProps) => {
                   )}
                 </div>
 
-                {/* Odometer & Gallons */}
+                {/* Odometer & Fuel */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-2">
                   <div>
                     <span className="text-gray-500">Odometer:</span>
-                    <span className="ml-1 font-medium">{record.odometer.toLocaleString()} mi</span>
+                    <span className="ml-1 font-medium">{formatDistance(record.odometer, settings)}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500">Gallons:</span>
-                    <span className="ml-1 font-medium">{record.gallons.toFixed(3)}</span>
+                    <span className="text-gray-500">Fuel:</span>
+                    <span className="ml-1 font-medium">{formatFuelVolume(record.gallons, settings)}</span>
                   </div>
-                  {record.mpg && (
+                  {record.mpg && record.miles_driven && (
                     <div>
-                      <span className="text-gray-500">MPG:</span>
+                      <span className="text-gray-500">Economy:</span>
                       <span className="ml-1 font-medium text-green-600">
-                        {record.mpg.toFixed(1)}
+                        {formatFuelEconomy(record.miles_driven, record.gallons, settings)}
                       </span>
                     </div>
                   )}
                   {record.miles_driven && (
                     <div>
-                      <span className="text-gray-500">Miles:</span>
-                      <span className="ml-1 font-medium">{record.miles_driven}</span>
+                      <span className="text-gray-500">Distance:</span>
+                      <span className="ml-1 font-medium">{formatDistance(record.miles_driven, settings)}</span>
                     </div>
                   )}
                 </div>

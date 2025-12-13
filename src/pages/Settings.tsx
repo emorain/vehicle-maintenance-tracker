@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Toast } from '../components/Toast';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface UserSettings {
   distance_unit: 'miles' | 'kilometers';
@@ -12,6 +13,7 @@ interface UserSettings {
 }
 
 export const Settings = () => {
+  const { refreshSettings } = useSettings();
   const [settings, setSettings] = useState<UserSettings>({
     distance_unit: 'miles',
     fuel_unit: 'gallons',
@@ -88,6 +90,8 @@ export const Settings = () => {
       if (error) throw error;
 
       setToast({ message: 'Settings saved successfully!', type: 'success' });
+      // Refresh the settings context so changes appear app-wide
+      await refreshSettings();
     } catch (error) {
       console.error('Error saving settings:', error);
       setToast({ message: 'Failed to save settings', type: 'error' });

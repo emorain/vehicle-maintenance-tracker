@@ -1,11 +1,14 @@
 // src/components/FuelStats.tsx
 import { FuelStats as FuelStatsType } from '../types/Fuel';
+import { useSettings } from '../contexts/SettingsContext';
+import { formatFuelVolume, formatDistance, formatFuelEconomy, getFuelUnitLabel, getDistanceUnitLabel } from '../utils/unitConversions';
 
 interface FuelStatsProps {
   stats: FuelStatsType;
 }
 
 export const FuelStats = ({ stats }: FuelStatsProps) => {
+  const { settings } = useSettings();
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
       <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -27,11 +30,11 @@ export const FuelStats = ({ stats }: FuelStatsProps) => {
           <div className="text-2xl font-bold text-gray-800">{stats.totalFillUps}</div>
         </div>
 
-        {/* Total Gallons */}
+        {/* Total Fuel */}
         <div className="bg-white rounded-lg p-4 shadow-sm">
-          <div className="text-sm text-gray-500 mb-1">Total Gallons</div>
+          <div className="text-sm text-gray-500 mb-1">Total Fuel</div>
           <div className="text-2xl font-bold text-gray-800">
-            {stats.totalGallons.toFixed(1)}
+            {formatFuelVolume(stats.totalGallons, settings)}
           </div>
         </div>
 
@@ -43,49 +46,49 @@ export const FuelStats = ({ stats }: FuelStatsProps) => {
           </div>
         </div>
 
-        {/* Miles Tracked */}
+        {/* Distance Tracked */}
         <div className="bg-white rounded-lg p-4 shadow-sm">
-          <div className="text-sm text-gray-500 mb-1">Miles Tracked</div>
+          <div className="text-sm text-gray-500 mb-1">Distance Tracked</div>
           <div className="text-2xl font-bold text-gray-800">
-            {stats.milesTracked.toLocaleString()}
+            {formatDistance(stats.milesTracked, settings)}
           </div>
         </div>
 
-        {/* Average MPG */}
+        {/* Average Fuel Economy */}
         <div className="bg-white rounded-lg p-4 shadow-sm">
-          <div className="text-sm text-gray-500 mb-1">Average MPG</div>
+          <div className="text-sm text-gray-500 mb-1">Avg Economy</div>
           <div className="text-2xl font-bold text-green-600">
-            {stats.averageMPG > 0 ? stats.averageMPG.toFixed(1) : 'N/A'}
+            {stats.averageMPG > 0 ? formatFuelEconomy(stats.milesTracked, stats.totalGallons / stats.totalFillUps * (stats.milesTracked / stats.milesTracked), settings) : 'N/A'}
           </div>
         </div>
 
-        {/* Best MPG */}
+        {/* Best Fuel Economy */}
         <div className="bg-white rounded-lg p-4 shadow-sm">
-          <div className="text-sm text-gray-500 mb-1">Best MPG</div>
+          <div className="text-sm text-gray-500 mb-1">Best Economy</div>
           <div className="text-2xl font-bold text-green-700">
             {stats.bestMPG > 0 ? stats.bestMPG.toFixed(1) : 'N/A'}
           </div>
         </div>
 
-        {/* Worst MPG */}
+        {/* Worst Fuel Economy */}
         <div className="bg-white rounded-lg p-4 shadow-sm">
-          <div className="text-sm text-gray-500 mb-1">Worst MPG</div>
+          <div className="text-sm text-gray-500 mb-1">Worst Economy</div>
           <div className="text-2xl font-bold text-orange-600">
             {stats.worstMPG > 0 ? stats.worstMPG.toFixed(1) : 'N/A'}
           </div>
         </div>
 
-        {/* Average Cost per Gallon */}
+        {/* Average Cost per Unit */}
         <div className="bg-white rounded-lg p-4 shadow-sm">
-          <div className="text-sm text-gray-500 mb-1">Avg $/Gallon</div>
+          <div className="text-sm text-gray-500 mb-1">Avg $/{getFuelUnitLabel(settings)}</div>
           <div className="text-2xl font-bold text-gray-800">
             ${stats.averageCostPerGallon > 0 ? stats.averageCostPerGallon.toFixed(3) : '0.000'}
           </div>
         </div>
 
-        {/* Average Cost per Mile */}
+        {/* Average Cost per Distance */}
         <div className="bg-white rounded-lg p-4 shadow-sm">
-          <div className="text-sm text-gray-500 mb-1">Avg $/Mile</div>
+          <div className="text-sm text-gray-500 mb-1">Avg $/{getDistanceUnitLabel(settings)}</div>
           <div className="text-2xl font-bold text-blue-700">
             ${stats.averageCostPerMile > 0 ? stats.averageCostPerMile.toFixed(3) : '0.000'}
           </div>
