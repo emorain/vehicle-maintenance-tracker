@@ -5,8 +5,11 @@ import { Vehicle } from '../types/Vehicle';
 import { MaintenanceDue } from '../types/Protocol';
 import { Link } from 'react-router-dom';
 import { Analytics } from '../components/Analytics';
+import { useSettings } from '../contexts/SettingsContext';
+import { formatDistance } from '../utils/unitConversions';
 
 export const Dashboard = () => {
+  const { settings } = useSettings();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [maintenanceDue, setMaintenanceDue] = useState<MaintenanceDue[]>([]);
   const [loading, setLoading] = useState(true);
@@ -294,7 +297,7 @@ export const Dashboard = () => {
 
               {vehicle.mileage && (
                 <p className="text-sm text-gray-600">
-                  Mileage: {vehicle.mileage.toLocaleString()} mi
+                  Odometer: {formatDistance(vehicle.mileage, settings)}
                 </p>
               )}
 
