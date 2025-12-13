@@ -6,6 +6,7 @@ import { VehicleDetails } from './pages/VehicleDetails';
 import { Protocols } from './pages/Protocols';
 import { ResetPassword } from './pages/ResetPassword';
 import { BulkImport } from './pages/BulkImport';
+import { Settings } from './pages/Settings';
 import { ProtectedPage } from './components/ProtectedPage';
 import { HeaderNav } from './components/HeaderNav';
 
@@ -60,6 +61,14 @@ function App() {
               element={
                 <ProtectedPage>
                   <Protocols />
+                </ProtectedPage>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedPage>
+                  <Settings />
                 </ProtectedPage>
               }
             />
