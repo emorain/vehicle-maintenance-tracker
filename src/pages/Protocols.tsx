@@ -4,8 +4,11 @@ import { ProtocolService } from '../services/ProtocolService';
 import { MaintenanceProtocol } from '../types/Protocol';
 import { Toast } from '../components/Toast';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { useSettings } from '../contexts/SettingsContext';
+import { formatDistance, getDistanceUnitLabel } from '../utils/unitConversions';
 
 export const Protocols = () => {
+  const { settings } = useSettings();
   const [protocols, setProtocols] = useState<MaintenanceProtocol[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -203,13 +206,13 @@ export const Protocols = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Interval (Miles)
+                  Interval ({getDistanceUnitLabel(settings)})
                 </label>
                 <input
                   type="number"
                   value={formData.interval_miles}
                   onChange={(e) => setFormData({ ...formData, interval_miles: e.target.value })}
-                  placeholder="e.g., 3000"
+                  placeholder={settings.distance_unit === 'kilometers' ? 'e.g., 5000' : 'e.g., 3000'}
                   min="1"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -264,7 +267,7 @@ export const Protocols = () => {
                   <span className="bg-white px-2 py-1 rounded">📅 {protocol.interval_months} months</span>
                 )}
                 {protocol.interval_miles && (
-                  <span className="bg-white px-2 py-1 rounded">📊 {protocol.interval_miles.toLocaleString()} mi</span>
+                  <span className="bg-white px-2 py-1 rounded">📊 {formatDistance(protocol.interval_miles, settings)}</span>
                 )}
               </div>
               {protocol.description && (
@@ -324,7 +327,7 @@ export const Protocols = () => {
                     <span className="bg-gray-100 px-2 py-1 rounded">📅 {protocol.interval_months} months</span>
                   )}
                   {protocol.interval_miles && (
-                    <span className="bg-gray-100 px-2 py-1 rounded">📊 {protocol.interval_miles.toLocaleString()} mi</span>
+                    <span className="bg-gray-100 px-2 py-1 rounded">📊 {formatDistance(protocol.interval_miles, settings)}</span>
                   )}
                 </div>
                 {protocol.description && (

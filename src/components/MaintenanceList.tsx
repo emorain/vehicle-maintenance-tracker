@@ -4,6 +4,8 @@ import { MaintenanceRecord, SERVICE_TYPES } from '../types/Maintenance';
 import { Toast } from './Toast';
 import { ConfirmModal } from './ConfirmModal';
 import { MaintenanceForm } from './MaintenanceForm';
+import { useSettings } from '../contexts/SettingsContext';
+import { formatDistance } from '../utils/unitConversions';
 
 interface MaintenanceListProps {
   vehicleId: string;
@@ -11,6 +13,7 @@ interface MaintenanceListProps {
 }
 
 export const MaintenanceList = ({ vehicleId, refreshKey }: MaintenanceListProps) => {
+  const { settings } = useSettings();
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -227,7 +230,7 @@ export const MaintenanceList = ({ vehicleId, refreshKey }: MaintenanceListProps)
 
                     <div className="flex gap-4 text-sm text-gray-600">
                       {record.mileage && (
-                        <span>📊 {record.mileage.toLocaleString()} mi</span>
+                        <span>📊 {formatDistance(record.mileage, settings)}</span>
                       )}
                       {record.cost && (
                         <span className="font-semibold text-green-600">

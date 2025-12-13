@@ -8,6 +8,8 @@ import { PartUsed } from '../types/Parts';
 import { Toast } from './Toast';
 import { PartsSelector } from './PartsSelector';
 import { ImageUpload } from './ImageUpload';
+import { useSettings } from '../contexts/SettingsContext';
+import { getDistanceUnitLabel } from '../utils/unitConversions';
 
 interface MaintenanceFormProps {
   vehicleId: string;
@@ -22,6 +24,7 @@ export const MaintenanceForm = ({
   existingRecord,
   onCancel,
 }: MaintenanceFormProps) => {
+  const { settings } = useSettings();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [formData, setFormData] = useState<Partial<MaintenanceRecord>>({
     vehicle_id: vehicleId,
@@ -192,12 +195,12 @@ export const MaintenanceForm = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mileage (optional)
+              {settings.distance_unit === 'kilometers' ? 'Odometer' : 'Mileage'} ({getDistanceUnitLabel(settings)}) (optional)
             </label>
             <input
               type="number"
               name="mileage"
-              placeholder="Current mileage"
+              placeholder={`Current ${settings.distance_unit === 'kilometers' ? 'kilometers' : 'mileage'}`}
               value={formData.mileage || ''}
               onChange={handleChange}
               min="0"
