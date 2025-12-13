@@ -71,6 +71,12 @@ export const HeaderNav = () => {
             Inventory
           </Link>
           <Link
+            to="/bulk-import"
+            className="text-white hover:bg-white/20 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium transition text-xs sm:text-sm whitespace-nowrap"
+          >
+            Bulk Import
+          </Link>
+          <Link
             to="/protocols"
             className="text-white hover:bg-white/20 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium transition text-xs sm:text-sm whitespace-nowrap"
           >
