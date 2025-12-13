@@ -247,8 +247,8 @@ export const MaintenanceForm = ({
             currentImages={formData.receipts || []}
             onImagesChange={(urls) => setFormData(prev => ({ ...prev, receipts: urls }))}
             maxImages={5}
+            acceptPDF={true}
           />
-          <p className="text-xs text-gray-500 mt-1">Upload receipts, invoices, or other documents (images or PDFs)</p>
         </div>
 
         {/* Parts Selector */}

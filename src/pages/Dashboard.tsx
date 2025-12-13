@@ -47,6 +47,107 @@ export const Dashboard = () => {
       {loading && <p>Loading vehicles...</p>}
       {error && <p className="text-red-500">{error}</p>}
 
+      {/* Warranty Expiration Alerts */}
+      {!loading && !error && vehicles.length > 0 && (() => {
+        const today = new Date();
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(today.getDate() + 30);
+
+        const expiredWarranties = vehicles.filter(v =>
+          v.warranty_expiration && new Date(v.warranty_expiration) < today
+        );
+
+        const expiringWarranties = vehicles.filter(v =>
+          v.warranty_expiration &&
+          new Date(v.warranty_expiration) >= today &&
+          new Date(v.warranty_expiration) <= thirtyDaysFromNow
+        );
+
+        if (expiredWarranties.length === 0 && expiringWarranties.length === 0) return null;
+
+        return (
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Warranty Alerts</h2>
+
+            {/* Expired Warranties */}
+            {expiredWarranties.length > 0 && (
+              <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-4">
+                <h3 className="text-lg font-bold text-red-800 mb-3 flex items-center gap-2">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Expired Warranties ({expiredWarranties.length})
+                </h3>
+                <div className="space-y-2">
+                  {expiredWarranties.map(vehicle => {
+                    const daysExpired = Math.floor((today.getTime() - new Date(vehicle.warranty_expiration!).getTime()) / (1000 * 60 * 60 * 24));
+                    return (
+                      <div key={vehicle.id} className="bg-white rounded p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div>
+                          <p className="font-semibold text-gray-800">
+                            {vehicle.year} {vehicle.make} {vehicle.model}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Warranty expired on {new Date(vehicle.warranty_expiration!).toLocaleDateString()}
+                          </p>
+                          <p className="text-xs text-red-600">
+                            {daysExpired} day{daysExpired !== 1 ? 's' : ''} ago
+                          </p>
+                        </div>
+                        <Link
+                          to={`/vehicle/${vehicle.id}`}
+                          className="w-full sm:w-auto text-center bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm"
+                        >
+                          View Vehicle
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Expiring Soon Warranties */}
+            {expiringWarranties.length > 0 && (
+              <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4">
+                <h3 className="text-lg font-bold text-orange-800 mb-3 flex items-center gap-2">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  Warranties Expiring Soon ({expiringWarranties.length})
+                </h3>
+                <div className="space-y-2">
+                  {expiringWarranties.map(vehicle => {
+                    const daysUntilExpiration = Math.floor((new Date(vehicle.warranty_expiration!).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                    return (
+                      <div key={vehicle.id} className="bg-white rounded p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div>
+                          <p className="font-semibold text-gray-800">
+                            {vehicle.year} {vehicle.make} {vehicle.model}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Warranty expires on {new Date(vehicle.warranty_expiration!).toLocaleDateString()}
+                          </p>
+                          <p className="text-xs text-orange-700">
+                            {daysUntilExpiration} day{daysUntilExpiration !== 1 ? 's' : ''} remaining
+                          </p>
+                        </div>
+                        <Link
+                          to={`/vehicle/${vehicle.id}`}
+                          className="w-full sm:w-auto text-center bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 text-sm"
+                        >
+                          View Vehicle
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Upcoming/Overdue Maintenance */}
       {!loading && !error && maintenanceDue.length > 0 && (
         <div className="mb-6" data-reminders>
@@ -218,7 +319,7 @@ export const Dashboard = () => {
 
       <div className="mt-8 bg-white rounded-lg shadow p-6">
         <h3 className="text-xl font-bold mb-4">Quick Stats</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-blue-50 p-4 rounded">
             <p className="text-sm text-gray-600">Total Vehicles</p>
             <p className="text-2xl font-bold text-blue-600">{vehicles.length}</p>
@@ -241,6 +342,29 @@ export const Dashboard = () => {
           <div className="bg-purple-50 p-4 rounded">
             <p className="text-sm text-gray-600">Active Protocols</p>
             <p className="text-2xl font-bold text-purple-600">{maintenanceDue.length}</p>
+          </div>
+          <div className={`p-4 rounded ${(() => {
+            const today = new Date();
+            const expiredCount = vehicles.filter(v => v.warranty_expiration && new Date(v.warranty_expiration) < today).length;
+            const activeCount = vehicles.filter(v => v.warranty_expiration && new Date(v.warranty_expiration) >= today).length;
+            return expiredCount > 0 ? 'bg-red-50' : activeCount > 0 ? 'bg-green-50' : 'bg-gray-50';
+          })()}`}>
+            <p className="text-sm text-gray-600">Warranty Status</p>
+            <p className={`text-2xl font-bold ${(() => {
+              const today = new Date();
+              const expiredCount = vehicles.filter(v => v.warranty_expiration && new Date(v.warranty_expiration) < today).length;
+              const activeCount = vehicles.filter(v => v.warranty_expiration && new Date(v.warranty_expiration) >= today).length;
+              return expiredCount > 0 ? 'text-red-600' : activeCount > 0 ? 'text-green-600' : 'text-gray-600';
+            })()}`}>
+              {(() => {
+                const today = new Date();
+                const expiredCount = vehicles.filter(v => v.warranty_expiration && new Date(v.warranty_expiration) < today).length;
+                const activeCount = vehicles.filter(v => v.warranty_expiration && new Date(v.warranty_expiration) >= today).length;
+                if (expiredCount > 0) return `${expiredCount} Expired`;
+                if (activeCount > 0) return `${activeCount} Active`;
+                return 'None Set';
+              })()}
+            </p>
           </div>
         </div>
       </div>

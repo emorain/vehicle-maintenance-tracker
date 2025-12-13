@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Toast } from '../components/Toast';
 import { useSettings } from '../contexts/SettingsContext';
+import { ExportService } from '../services/ExportService';
 
 interface UserSettings {
   distance_unit: 'miles' | 'kilometers';
@@ -30,6 +31,7 @@ export const Settings = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -135,6 +137,58 @@ export const Settings = () => {
       setToast({ message: error.message || 'Failed to change password', type: 'error' });
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const handleExportBackup = async () => {
+    setExporting(true);
+    try {
+      await ExportService.downloadBackup();
+      setToast({ message: 'Data exported successfully!', type: 'success' });
+    } catch (error: any) {
+      console.error('Export error:', error);
+      setToast({ message: error.message || 'Failed to export data', type: 'error' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportVehiclesCSV = async () => {
+    setExporting(true);
+    try {
+      await ExportService.exportVehiclesToCSV();
+      setToast({ message: 'Vehicles exported successfully!', type: 'success' });
+    } catch (error: any) {
+      console.error('Export error:', error);
+      setToast({ message: error.message || 'Failed to export vehicles', type: 'error' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportMaintenanceCSV = async () => {
+    setExporting(true);
+    try {
+      await ExportService.exportMaintenanceToCSV();
+      setToast({ message: 'Maintenance records exported successfully!', type: 'success' });
+    } catch (error: any) {
+      console.error('Export error:', error);
+      setToast({ message: error.message || 'Failed to export maintenance records', type: 'error' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportFuelCSV = async () => {
+    setExporting(true);
+    try {
+      await ExportService.exportFuelToCSV();
+      setToast({ message: 'Fuel records exported successfully!', type: 'success' });
+    } catch (error: any) {
+      console.error('Export error:', error);
+      setToast({ message: error.message || 'Failed to export fuel records', type: 'error' });
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -405,6 +459,152 @@ export const Settings = () => {
               {changingPassword ? 'Changing Password...' : 'Change Password'}
             </button>
           </form>
+        </div>
+
+        {/* Data Backup & Export */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Data Backup & Export
+          </h2>
+
+          <p className="text-gray-600 mb-6">
+            Download your data for backup or analysis. All exports are generated in real-time.
+          </p>
+
+          <div className="space-y-4">
+            {/* Complete Backup */}
+            <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Complete Backup (JSON)
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Download all your data including vehicles, maintenance, fuel records, protocols, and settings.
+                  </p>
+                </div>
+                <button
+                  onClick={handleExportBackup}
+                  disabled={exporting}
+                  className={`ml-4 px-4 py-2 rounded-lg font-medium ${
+                    exporting
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
+                >
+                  {exporting ? 'Exporting...' : 'Download'}
+                </button>
+              </div>
+            </div>
+
+            {/* Vehicles CSV */}
+            <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                    </svg>
+                    Vehicles List (CSV)
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Export all vehicle information as a spreadsheet.
+                  </p>
+                </div>
+                <button
+                  onClick={handleExportVehiclesCSV}
+                  disabled={exporting}
+                  className={`ml-4 px-4 py-2 rounded-lg font-medium ${
+                    exporting
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {exporting ? 'Exporting...' : 'Download'}
+                </button>
+              </div>
+            </div>
+
+            {/* Maintenance CSV */}
+            <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Maintenance Records (CSV)
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Export all maintenance history for all vehicles.
+                  </p>
+                </div>
+                <button
+                  onClick={handleExportMaintenanceCSV}
+                  disabled={exporting}
+                  className={`ml-4 px-4 py-2 rounded-lg font-medium ${
+                    exporting
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                      : 'bg-orange-600 hover:bg-orange-700 text-white'
+                  }`}
+                >
+                  {exporting ? 'Exporting...' : 'Download'}
+                </button>
+              </div>
+            </div>
+
+            {/* Fuel CSV */}
+            <div className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Fuel Records (CSV)
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Export all fuel fill-up records for all vehicles.
+                  </p>
+                </div>
+                <button
+                  onClick={handleExportFuelCSV}
+                  disabled={exporting}
+                  className={`ml-4 px-4 py-2 rounded-lg font-medium ${
+                    exporting
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                      : 'bg-purple-600 hover:bg-purple-700 text-white'
+                  }`}
+                >
+                  {exporting ? 'Exporting...' : 'Download'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex gap-2">
+              <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="text-sm text-blue-800">
+                <p className="font-semibold mb-1">About Data Exports</p>
+                <ul className="list-disc list-inside space-y-1 text-blue-700">
+                  <li>JSON backup contains all your data and can be used for restoration</li>
+                  <li>CSV exports are compatible with Excel, Google Sheets, and other spreadsheet apps</li>
+                  <li>All exports include only your data - secure and private</li>
+                  <li>We recommend backing up your data regularly</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -4,6 +4,21 @@ import autoTable from 'jspdf-autotable';
 import { Vehicle } from '../types/Vehicle';
 import { MaintenanceRecord } from '../types/Maintenance';
 import { FuelRecordWithMPG, FuelStats } from '../types/Fuel';
+import { supabase } from '../lib/supabaseClient';
+import { VehicleService } from './VehicleService';
+import { MaintenanceService } from './MaintenanceService';
+import { FuelService } from './FuelService';
+import { ProtocolService } from './ProtocolService';
+
+export interface BackupData {
+  exportDate: string;
+  vehicles: any[];
+  maintenanceRecords: any[];
+  fuelRecords: any[];
+  protocols: any[];
+  vehicleProtocols: any[];
+  userSettings: any;
+}
 
 export class ExportService {
   static exportMaintenanceHistory(
@@ -172,5 +187,227 @@ export class ExportService {
       .replace(/\s+/g, '_')
       .toLowerCase();
     doc.save(fileName);
+  }
+
+  /**
+   * Export all user data to JSON format for backup
+   */
+  static async exportAllData(): Promise<BackupData> {
+    try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('You must be logged in to export data');
+      }
+
+      // Fetch all data in parallel
+      const [vehicles, protocols, vehicleProtocols, userSettings] = await Promise.all([
+        VehicleService.getVehicles(),
+        ProtocolService.getAllProtocols(),
+        supabase.from('vehicle_protocols').select('*').eq('user_id', user.id),
+        supabase.from('user_settings').select('*').eq('user_id', user.id).single(),
+      ]);
+
+      // Fetch maintenance and fuel records for all vehicles
+      const maintenanceRecords: any[] = [];
+      const fuelRecords: any[] = [];
+
+      for (const vehicle of vehicles) {
+        const [maintenance, fuel] = await Promise.all([
+          MaintenanceService.getMaintenanceByVehicle(vehicle.id),
+          FuelService.getFuelByVehicle(vehicle.id),
+        ]);
+        maintenanceRecords.push(...maintenance);
+        fuelRecords.push(...fuel);
+      }
+
+      const backupData: BackupData = {
+        exportDate: new Date().toISOString(),
+        vehicles,
+        maintenanceRecords,
+        fuelRecords,
+        protocols,
+        vehicleProtocols: vehicleProtocols.data || [],
+        userSettings: userSettings.data || {},
+      };
+
+      return backupData;
+    } catch (error: any) {
+      console.error('Export error:', error);
+      throw new Error(error.message || 'Failed to export data');
+    }
+  }
+
+  /**
+   * Download complete backup as JSON file
+   */
+  static async downloadBackup(): Promise<void> {
+    const data = await this.exportAllData();
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `upshift-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Export vehicles data as CSV
+   */
+  static async exportVehiclesToCSV(): Promise<void> {
+    const vehicles = await VehicleService.getVehicles();
+
+    const headers = [
+      'ID', 'Make', 'Model', 'Year', 'VIN', 'License Plate', 'Color',
+      'Odometer', 'Status', 'Drive Type', 'Tire Size', 'Trim', 'Body Type',
+      'Transmission', 'Fuel Type', 'Warranty Expiration', 'Notes', 'Created At'
+    ];
+
+    const rows = vehicles.map(v => [
+      v.id,
+      v.make,
+      v.model,
+      v.year,
+      v.vin || '',
+      v.license_plate || '',
+      v.color || '',
+      v.mileage || '',
+      v.status || 'Active',
+      v.drive_type || '',
+      v.tire_size || '',
+      v.trim || '',
+      v.body_type || '',
+      v.transmission || '',
+      v.fuel_type || '',
+      v.warranty_expiration || '',
+      v.notes || '',
+      v.created_at || ''
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `vehicles-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Export maintenance records as CSV
+   */
+  static async exportMaintenanceToCSV(): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const vehicles = await VehicleService.getVehicles();
+    const allRecords: any[] = [];
+
+    for (const vehicle of vehicles) {
+      const records = await MaintenanceService.getMaintenanceByVehicle(vehicle.id);
+      records.forEach(record => {
+        allRecords.push({
+          ...record,
+          vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+        });
+      });
+    }
+
+    const headers = [
+      'Vehicle', 'Service Type', 'Description', 'Service Date', 'Odometer',
+      'Cost', 'Notes', 'Created At'
+    ];
+
+    const rows = allRecords.map(r => [
+      r.vehicle,
+      r.service_type,
+      r.description || '',
+      r.service_date,
+      r.mileage || '',
+      r.cost || '',
+      r.notes || '',
+      r.created_at || ''
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `maintenance-records-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Export fuel records as CSV
+   */
+  static async exportFuelToCSV(): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const vehicles = await VehicleService.getVehicles();
+    const allRecords: any[] = [];
+
+    for (const vehicle of vehicles) {
+      const records = await FuelService.getFuelByVehicle(vehicle.id);
+      records.forEach(record => {
+        allRecords.push({
+          ...record,
+          vehicle: `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+        });
+      });
+    }
+
+    const headers = [
+      'Vehicle', 'Fill Date', 'Odometer', 'Gallons', 'Cost Per Gallon',
+      'Total Cost', 'Miles Driven', 'MPG', 'Station', 'Notes', 'Created At'
+    ];
+
+    const rows = allRecords.map(r => [
+      r.vehicle,
+      r.fill_date,
+      r.odometer || '',
+      r.gallons || '',
+      r.price_per_gallon || '',
+      r.total_cost || '',
+      r.miles_driven || '',
+      r.mpg || '',
+      r.gas_station || '',
+      r.notes || '',
+      r.created_at || ''
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `fuel-records-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 }

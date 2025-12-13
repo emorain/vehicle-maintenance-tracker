@@ -5,12 +5,14 @@ interface ImageUploadProps {
   currentImages?: string[];
   onImagesChange: (urls: string[]) => void;
   maxImages?: number;
+  acceptPDF?: boolean; // Allow PDFs for receipts/documents
 }
 
 export const ImageUpload = ({
   currentImages = [],
   onImagesChange,
-  maxImages = 10
+  maxImages = 10,
+  acceptPDF = false
 }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -23,13 +25,17 @@ export const ImageUpload = ({
       setUploadError(null);
 
       // Validate file
-      if (!file.type.startsWith('image/')) {
-        throw new Error('Please upload an image file');
+      const isImage = file.type.startsWith('image/');
+      const isPDF = file.type === 'application/pdf';
+
+      if (!isImage && !(acceptPDF && isPDF)) {
+        throw new Error(acceptPDF ? 'Please upload an image or PDF file' : 'Please upload an image file');
       }
 
-      // Max 5MB
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error('Image must be less than 5MB');
+      // Max 10MB for PDFs, 5MB for images
+      const maxSize = isPDF ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        throw new Error(isPDF ? 'PDF must be less than 10MB' : 'Image must be less than 5MB');
       }
 
       // Get current user
@@ -121,28 +127,45 @@ export const ImageUpload = ({
       {/* Images Gallery */}
       {currentImages.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {currentImages.map((imageUrl, index) => (
-            <div key={index} className="relative group">
-              <img
-                src={imageUrl}
-                alt={`Vehicle ${index + 1}`}
-                className="w-full h-32 object-cover rounded-lg border border-gray-200"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveImage(imageUrl)}
-                className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Remove image"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-2 py-0.5 rounded">
-                {index + 1}/{currentImages.length}
+          {currentImages.map((imageUrl, index) => {
+            const isPDF = imageUrl.toLowerCase().endsWith('.pdf');
+            return (
+              <div key={index} className="relative group">
+                {isPDF ? (
+                  <a
+                    href={imageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full h-32 flex flex-col items-center justify-center bg-gray-100 rounded-lg border border-gray-300 hover:bg-gray-200 transition"
+                  >
+                    <svg className="w-12 h-12 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs text-gray-600 mt-1">PDF Document</span>
+                  </a>
+                ) : (
+                  <img
+                    src={imageUrl}
+                    alt={`Document ${index + 1}`}
+                    className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(imageUrl)}
+                  className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-2 py-0.5 rounded">
+                  {index + 1}/{currentImages.length}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -186,7 +209,7 @@ export const ImageUpload = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept={acceptPDF ? "image/*,application/pdf" : "image/*"}
             multiple
             onChange={handleFileSelect}
             className="hidden"
@@ -197,7 +220,7 @@ export const ImageUpload = ({
       {/* Upload Progress/Error */}
       {uploading && (
         <div className="text-center text-sm text-blue-600">
-          Uploading image...
+          Uploading...
         </div>
       )}
 
@@ -208,7 +231,8 @@ export const ImageUpload = ({
       )}
 
       <p className="text-xs text-gray-500">
-        {currentImages.length}/{maxImages} images • Max 5MB per image • Supports JPG, PNG, WebP, GIF
+        {currentImages.length}/{maxImages} {acceptPDF ? 'files' : 'images'} •
+        {acceptPDF ? ' Max 10MB per PDF, 5MB per image • Supports JPG, PNG, WebP, GIF, PDF' : ' Max 5MB per image • Supports JPG, PNG, WebP, GIF'}
       </p>
     </div>
   );
