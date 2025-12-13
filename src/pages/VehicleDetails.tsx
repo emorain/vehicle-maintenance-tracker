@@ -13,6 +13,8 @@ import { FuelForm } from '../components/FuelForm';
 import { FuelList } from '../components/FuelList';
 import { FuelStats } from '../components/FuelStats';
 import { ExportService } from '../services/ExportService';
+import { useSettings } from '../contexts/SettingsContext';
+import { formatDistance } from '../utils/unitConversions';
 
 // Helper function to get status badge color
 const getStatusColor = (status?: Vehicle['status']) => {
@@ -33,6 +35,7 @@ const getStatusColor = (status?: Vehicle['status']) => {
 };
 
 export const VehicleDetails = () => {
+  const { settings } = useSettings();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
@@ -210,8 +213,8 @@ export const VehicleDetails = () => {
               )}
               {vehicle.mileage && (
                 <div>
-                  <p className="text-gray-600">Mileage</p>
-                  <p className="font-semibold">{vehicle.mileage.toLocaleString()} mi</p>
+                  <p className="text-gray-600">Odometer</p>
+                  <p className="font-semibold">{formatDistance(vehicle.mileage, settings)}</p>
                 </div>
               )}
               {vehicle.trim && (
